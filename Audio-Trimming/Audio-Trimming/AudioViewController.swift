@@ -27,10 +27,10 @@ class AudioViewController: UIViewController {
     exportUsingComposition()
   }
   
-  func playAudio() {
-    guard let url = URL(string: mp3AudioFile) else {
-      return
-    }
+  func playAudio(with url: URL) {
+//    guard let url = URL(string: mp3AudioFile) else {
+//      return
+//    }
     do {
       let data = try Data(contentsOf: url)
       player = try AVAudioPlayer(data: data)
@@ -85,6 +85,8 @@ class AudioViewController: UIViewController {
     let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     let trimmedFileURL = documentsDir.appendingPathComponent(filename)
     
+    print(trimmedFileURL)
+    
     if FileManager.default.fileExists(atPath: trimmedFileURL.path) {
       print("file exists")
       try? FileManager.default.removeItem(at: trimmedFileURL)
@@ -96,7 +98,7 @@ class AudioViewController: UIViewController {
     exportSession.outputFileType = .mp4
     
     let startTime = CMTime(value: 0, timescale: 1)
-    let stopTime = CMTime(value: 5, timescale: 1)
+    let stopTime = CMTime(value: 3, timescale: 1)
     exportSession.timeRange = CMTimeRange(start: startTime, end: stopTime)
     
     exportSession.exportAsynchronously {
@@ -110,6 +112,7 @@ class AudioViewController: UIViewController {
         print("exporting")
       case .completed:
         print("completed")
+        self.playAudio(with: trimmedFileURL)
       case .waiting:
         print("waiting")
       case .unknown:
