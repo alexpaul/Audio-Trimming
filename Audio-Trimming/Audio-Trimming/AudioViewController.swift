@@ -10,7 +10,7 @@ import UIKit
 import AVFoundation
 import AVKit
 
-class ViewController: UIViewController {
+class AudioViewController: UIViewController {
   
   private var player: AVAudioPlayer?
   
@@ -24,12 +24,8 @@ class ViewController: UIViewController {
   
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
-    //playAudio()
-    //playFromBundle()
-    //exportAsset(with: m4aAudioFile, filename: filename)
     exportUsingComposition()
   }
-  
   
   func playAudio() {
     guard let url = URL(string: mp3AudioFile) else {
@@ -37,7 +33,6 @@ class ViewController: UIViewController {
     }
     do {
       let data = try Data(contentsOf: url)
-      //player = try AVAudioPlayer(contentsOf: url)
       player = try AVAudioPlayer(data: data)
       player?.prepareToPlay()
       player?.play()
@@ -64,16 +59,13 @@ class ViewController: UIViewController {
     guard let url = URL(string: mp3AudioFile) else {
       return
     }
-    //let assetItem = AVPlayerItem(url: url) // https://developer.apple.com/documentation/avfoundation/avplayeritem
     let asset = AVURLAsset(url: url, options: nil) // https://developer.apple.com/documentation/avfoundation/avurlasset
     
     let composition = AVMutableComposition()
     let compositionAudioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: CMPersistentTrackID(kCMPersistentTrackID_Invalid))
-    //let sourceAudioTrack = assetItem.asset.tracks(withMediaType: AVMediaType.audio).first!
     let sourceAudioTrack = asset.tracks(withMediaType: AVMediaType.audio).first!
     
     do {
-      //try compositionAudioTrack?.insertTimeRange(CMTimeRange(start: CMTime.zero, duration: assetItem.duration), of: sourceAudioTrack, at: CMTime.zero)
       try compositionAudioTrack?.insertTimeRange(CMTimeRange(start: CMTime.zero, duration: asset.duration), of: sourceAudioTrack, at: CMTime.zero)
     } catch {
       print("failed exportUsingComposition: \(error)")
@@ -83,7 +75,6 @@ class ViewController: UIViewController {
     var preset: String = AVAssetExportPresetPassthrough
     if compatiblePresets.contains(AVAssetExportPresetAppleM4A) {
       preset = AVAssetExportPreset1920x1080 // can change preset here - see doc for more presets
-      //preset = AVAssetExportPresetAppleM4A // does not work
     }
     
     guard let exportSession = AVAssetExportSession(asset: composition, presetName: preset),
