@@ -20,17 +20,17 @@ class AudioViewController: UIViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    exportUsingComposition()
+    //playFileFromDocumentsDirectory()
   }
   
-  override func viewDidAppear(_ animated: Bool) {
-    super.viewDidAppear(animated)
-    exportUsingComposition()
+  func playFileFromDocumentsDirectory() {
+    let docDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    let fileURL = docDir.appendingPathComponent(filename)
+    playAudio(with: fileURL)
   }
   
   func playAudio(with url: URL) {
-//    guard let url = URL(string: mp3AudioFile) else {
-//      return
-//    }
     do {
       let data = try Data(contentsOf: url)
       player = try AVAudioPlayer(data: data)
