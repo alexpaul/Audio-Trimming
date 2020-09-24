@@ -5,10 +5,7 @@
 Sample audio `https://dl.espressif.com/dl/audio/ff-16b-2c-44100hz.m4a`
 
 ```swift
-func playAudio() {
-  guard let url = URL(string: mp3AudioFile) else {
-    return
-  }
+func playAudio(with url: URL) {
   do {
     let data = try Data(contentsOf: url)
     player = try AVAudioPlayer(data: data)
@@ -45,14 +42,14 @@ func exportUsingComposition() {
   guard let url = URL(string: mp3AudioFile) else {
     return
   }
-  let assetItem = AVPlayerItem(url: url)
+  let asset = AVURLAsset(url: url, options: nil) // https://developer.apple.com/documentation/avfoundation/avurlasset
   
   let composition = AVMutableComposition()
   let compositionAudioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: CMPersistentTrackID(kCMPersistentTrackID_Invalid))
-  let sourceAudioTrack = assetItem.asset.tracks(withMediaType: AVMediaType.audio).first!
+  let sourceAudioTrack = asset.tracks(withMediaType: AVMediaType.audio).first!
   
   do {
-    try compositionAudioTrack?.insertTimeRange(CMTimeRange(start: CMTime.zero, duration: assetItem.duration), of: sourceAudioTrack, at: CMTime.zero)
+    try compositionAudioTrack?.insertTimeRange(CMTimeRange(start: CMTime.zero, duration: asset.duration), of: sourceAudioTrack, at: CMTime.zero)
   } catch {
     print("failed exportUsingComposition: \(error)")
   }
@@ -61,16 +58,17 @@ func exportUsingComposition() {
   var preset: String = AVAssetExportPresetPassthrough
   if compatiblePresets.contains(AVAssetExportPresetAppleM4A) {
     preset = AVAssetExportPreset1920x1080 // can change preset here - see doc for more presets
-    //preset = AVAssetExportPresetAppleM4A // does not work
   }
   
   guard let exportSession = AVAssetExportSession(asset: composition, presetName: preset),
-    exportSession.supportedFileTypes.contains(.mp4) else {
-      fatalError("file type NOT supported")
+        exportSession.supportedFileTypes.contains(.mp4) else {
+    fatalError("file type NOT supported")
   }
   
   let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
   let trimmedFileURL = documentsDir.appendingPathComponent(filename)
+  
+  print(trimmedFileURL)
   
   if FileManager.default.fileExists(atPath: trimmedFileURL.path) {
     print("file exists")
@@ -83,7 +81,7 @@ func exportUsingComposition() {
   exportSession.outputFileType = .mp4
   
   let startTime = CMTime(value: 0, timescale: 1)
-  let stopTime = CMTime(value: 5, timescale: 1)
+  let stopTime = CMTime(value: 3, timescale: 1)
   exportSession.timeRange = CMTimeRange(start: startTime, end: stopTime)
   
   exportSession.exportAsynchronously {
@@ -97,6 +95,7 @@ func exportUsingComposition() {
       print("exporting")
     case .completed:
       print("completed")
+      self.playAudio(with: trimmedFileURL)
     case .waiting:
       print("waiting")
     case .unknown:
@@ -105,6 +104,16 @@ func exportUsingComposition() {
       print("future case")
     }
   }
+}
+```
+
+## Play Trimmed Audio from Documents Directory 
+
+```swift 
+func playFileFromDocumentsDirectory() {
+  let docDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+  let fileURL = docDir.appendingPathComponent(filename)
+  playAudio(with: fileURL)
 }
 ```
 
